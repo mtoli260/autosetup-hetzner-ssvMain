@@ -7,7 +7,7 @@ ADMINUSER="admin"
 GITHUB_USER="mtoli260"
 
 IMAGE="Ubuntu-2404-noble-amd64-base.tar.gz"
-INSTALLIMAGE="/root/.oldroot/nfs/install/installimage"
+INSTALLIMAGE="/autosetup"
 POSTINSTALL_WRAPPER="/root/.oldroot/nfs/install/post-install.sh"
 
 DRIVES=(
@@ -32,7 +32,7 @@ fi
 echo "[+] Erzeuge installimage-Konfiguration"
 
 cat > "$INSTALLIMAGE" <<EOF
-IMAGE=/root/.oldroot/nfs/install/Images/$IMAGE
+IMAGE=/root/.oldroot/nfs/install/../Images/$IMAGE
 
 HOSTNAME=$HOSTNAME
 IPV4_ONLY=yes
