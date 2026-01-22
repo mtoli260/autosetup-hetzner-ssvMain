@@ -137,16 +137,28 @@ chmod +x /post-install
 echo "[+] Starte automatische Installation"
 
 # Robustes Auffinden und Ausführen von installimage
-INSTALLIMAGE_BIN="$(command -v installimage 2>/dev/null || true)"
+# Verwende eine eigene Variable, damit $INSTALLIMAGE nicht überschrieben wird
+INSTALLIMAGE_CMD="$(command -v installimage 2>/dev/null || true)"
 
-# Falls alias/command nicht gefunden wurde, nutze bekannten absoluten Pfad (wie in deiner Shell)
-if [ -z "$INSTALLIMAGE_BIN" ] && [ -x "/root/.oldroot/nfs/install/installimage" ]; then
-  INSTALLIMAGE_BIN="/root/.oldroot/nfs/install/installimage"
+# Wenn nicht im PATH, prüfe den Alias-Zielpfad, den du interaktiv hattest
+if [ -z "$INSTALLIMAGE_CMD" ] && [ -x "/root/.oldroot/nfs/install/installimage" ]; then
+  INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
 fi
 
-# Falls noch nicht gefunden, interaktive Suche
-if 
-  echo "[!] installimage wurde nicht gefunden. Versuch manuell:"
-  echo "  interaktiv: type installimage  -> zeigt alias"
-  echo "  oder prüfe: ls -l /root/.oldroot/nfs/install/installimage"
+# Falls noch immer nicht gefunden, erweitere PATH um übliche Systempfade und suche erneut
+if [ -z "$INSTALLIMAGE_CMD" ]; then
+  export PATH="/sbin:/usr/sbin:/bin:/usr/bin:$PATH"
+  INSTALLIMAGE_CMD="$(command -v installimage 2>/dev/null || true)"
+fi
+
+if [ -n "$INSTALLIMAGE_CMD" ]; then
+  echo "[+] Gefundenes installimage: $INSTALLIMAGE_CMD — starte Installation"
+  # exec ersetzt den aktuellen Prozess durch installimage (kein Rückkehrpunkt)
+  exec "$INSTALLIMAGE_CMD"
+else
+  echo "[!] installimage wurde nicht gefunden. Bitte prüfe interaktiv:"
+  echo "    type installimage   # zeigt alias und Ziel"
+  echo "    ls -l /root/.oldroot/nfs/install/installimage"
+  echo "Oder setze PATH manuell: export PATH=/sbin:/usr/sbin:/bin:/usr/bin:\$PATH"
   exit 1
+fi
