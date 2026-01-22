@@ -34,18 +34,17 @@ cat > "$INSTALLIMAGE" <<EOF
 IMAGE=/root/.oldroot/nfs/install/../Images/$IMAGE
 
 HOSTNAME=$HOSTNAME
-IPV4_ONLY=yes
 
 DRIVE1=${DRIVES[0]}
 DRIVE2=${DRIVES[1]}
 DRIVE3=${DRIVES[2]}
 
+USE_KERNEL_MODE_SETTING yes
+
 SWRAID=1
 SWRAIDLEVEL=5
 
-#UEFI=1
-#PART /boot/efi esp 256M
-PART /boot ext4 1024M
+PART /boot ext3 1024M
 PART / ext4 all
 
 SSHKEYS_URL="https://github.com/$GITHUB_USER.keys"
