@@ -137,7 +137,6 @@ chmod +x /post-install
 echo "[+] Starte automatische Installation"
 
 # Robustes Auffinden und Ausführen von installimage
-# Verwende eine eigene Variable, damit $INSTALLIMAGE nicht überschrieben wird
 INSTALLIMAGE_CMD="$(command -v installimage 2>/dev/null || true)"
 
 # Wenn nicht im PATH, prüfe den Alias-Zielpfad, den du interaktiv hattest
@@ -153,7 +152,6 @@ fi
 
 if [ -n "$INSTALLIMAGE_CMD" ]; then
   echo "[+] Gefundenes installimage: $INSTALLIMAGE_CMD — starte Installation"
-  # exec ersetzt den aktuellen Prozess durch installimage (kein Rückkehrpunkt)
   exec "$INSTALLIMAGE_CMD"
 else
   echo "[!] installimage wurde nicht gefunden. Bitte prüfe interaktiv:"
