@@ -28,6 +28,19 @@ else
   wipefs -fa /dev/sd*
 fi
 
+# --- Neu: Vor dem Erzeugen prüfen und alte /autosetup und /post-install entfernen ---
+echo "[+] Entferne vorhandene /autosetup und /post-install (falls vorhanden)"
+if [ -e "$INSTALLIMAGE" ]; then
+  echo "  → Entferne $INSTALLIMAGE"
+  rm -f "$INSTALLIMAGE"
+fi
+
+if [ -e "/post-install" ]; then
+  echo "  → Entferne /post-install"
+  rm -f "/post-install"
+fi
+sync
+
 echo "[+] Erzeuge installimage-Konfiguration"
 
 cat > "$INSTALLIMAGE" <<EOF
