@@ -150,4 +150,3 @@ if
   echo "  interaktiv: type installimage  -> zeigt alias"
   echo "  oder prüfe: ls -l /root/.oldroot/nfs/install/installimage"
   exit 1
-fi
