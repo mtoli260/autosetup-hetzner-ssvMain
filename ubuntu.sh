@@ -43,8 +43,8 @@ DRIVE3=${DRIVES[2]}
 SWRAID=1
 SWRAIDLEVEL=5
 
-UEFI=1
-PART /boot/efi esp 256M
+#UEFI=1
+#PART /boot/efi esp 256M
 PART /boot ext4 1024M
 PART / ext4 all
 
