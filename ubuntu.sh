@@ -8,7 +8,7 @@ GITHUB_USER="mtoli260"
 
 IMAGE="Ubuntu-2404-noble-amd64-base.tar.gz"
 INSTALLIMAGE="/autosetup"
-POSTINSTALL_WRAPPER="/root/.oldroot/nfs/install/post-install.sh"
+POSTINSTALL_WRAPPER="/post-install"
 
 DRIVES=(
   /dev/nvme0n1
