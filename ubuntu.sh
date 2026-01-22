@@ -60,7 +60,6 @@ SWRAIDLEVEL=5
 PART /boot ext3 1024M
 PART / ext4 all
 
-SSHKEYS_URL="https://github.com/$GITHUB_USER.keys"
 POSTINSTALL=1
 EOF
 
