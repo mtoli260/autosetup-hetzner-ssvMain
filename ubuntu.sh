@@ -135,4 +135,19 @@ EOS
 chmod +x /post-install
 
 echo "[+] Starte automatische Installation"
-installimage
+
+# Robustes Auffinden und Ausführen von installimage
+INSTALLIMAGE_BIN="$(command -v installimage 2>/dev/null || true)"
+
+# Falls alias/command nicht gefunden wurde, nutze bekannten absoluten Pfad (wie in deiner Shell)
+if [ -z "$INSTALLIMAGE_BIN" ] && [ -x "/root/.oldroot/nfs/install/installimage" ]; then
+  INSTALLIMAGE_BIN="/root/.oldroot/nfs/install/installimage"
+fi
+
+# Falls noch nicht gefunden, interaktive Suche
+if 
+  echo "[!] installimage wurde nicht gefunden. Versuch manuell:"
+  echo "  interaktiv: type installimage  -> zeigt alias"
+  echo "  oder prüfe: ls -l /root/.oldroot/nfs/install/installimage"
+  exit 1
+fi
