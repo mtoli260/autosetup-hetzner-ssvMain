@@ -8,7 +8,6 @@ GITHUB_USER="mtoli260"
 
 IMAGE="Ubuntu-2404-noble-amd64-base.tar.gz"
 INSTALLIMAGE="/autosetup"
-POSTINSTALL_WRAPPER="/post-install"
 
 DRIVES=(
   /dev/nvme0n1
@@ -53,7 +52,7 @@ SSHKEYS_URL="https://github.com/$GITHUB_USER.keys"
 POSTINSTALL=1
 EOF
 
-echo "[+] Erzeuge /post-install"
+echo "[+] Erzeuge /post-install (Postinstall-Skript für das Zielsystem)"
 
 cat > /post-install <<'EOS'
 #!/bin/bash
@@ -79,7 +78,7 @@ echo "[+] SSH Hardening"
 sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/^#\?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-systemctl reload ssh
+systemctl reload ssh || true
 
 echo "[+] Docker installieren"
 apt -y install ca-certificates curl gnupg lsb-release
@@ -124,25 +123,16 @@ sed -i 's/^#MAILADDR.*/MAILADDR root/' /etc/mdadm/mdadm.conf
 update-initramfs -u
 
 echo "[+] eth-docker ins Admin-Home klonen"
-sudo -u $ADMINUSER bash <<EOF
+sudo -u $ADMINUSER bash <<'GITCLONE'
 cd /home/$ADMINUSER
 git clone https://github.com/ethstaker/eth-docker.git ssv-node
 cd ssv-node
-EOF
+GITCLONE
 
 echo "[+] Postinstall abgeschlossen"
 EOS
 
 chmod +x /post-install
-
-echo "[+] Verknüpfe Postinstall mit Installer"
-
-cat > "$POSTINSTALL_WRAPPER" <<EOF
-#!/bin/bash
-/post-install
-EOF
-
-chmod +x "$POSTINSTALL_WRAPPER"
 
 echo "[+] Starte automatische Installation"
 installimage
