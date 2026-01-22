@@ -17,6 +17,18 @@ DRIVES=(
 )
 ### ====================== ###
 
+echo "[+] STOPPE evtl. vorhandene RAID-Arrays"
+mdadm --stop /dev/md* 2>/dev/null || true
+
+echo "[+] Prüfe Disk-Typ und lösche Signaturen"
+if ls /dev/nvme*n1 >/dev/null 2>&1; then
+  echo "→ NVMe erkannt"
+  wipefs -fa /dev/nvme*n1
+else
+  echo "→ SATA erkannt"
+  wipefs -fa /dev/sd*
+fi
+
 echo "[+] Erzeuge installimage-Konfiguration"
 
 cat > "$INSTALLIMAGE" <<EOF
