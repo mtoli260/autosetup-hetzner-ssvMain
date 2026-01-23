@@ -7,8 +7,7 @@ ADMINUSER="admin"
 GITHUB_USER="mtoli260"
 
 IMAGE_FILE="Ubuntu-2404-noble-amd64-base.tar.gz"
-SOURCE_IMAGE="/root/.oldroot/nfs/install/images/$IMAGE_FILE"
-RESCUE_IMAGE="/root/$IMAGE_FILE"
+SOURCE_IMAGE="/root/.oldroot/nfs/install/../images/$IMAGE_FILE"
 INSTALLIMAGE_CONF="/autosetup"
 
 DRIVES=(
@@ -32,15 +31,6 @@ fi
 
 echo "[+] Entferne alte Konfigurationsdateien"
 rm -f "$INSTALLIMAGE_CONF" /post-install
-sync
-
-# --- IMAGE in Rescue kopieren ---
-echo "[+] Kopiere OS-Image ins Rescue-System"
-if [ ! -f "$SOURCE_IMAGE" ]; then
-  echo "[!] Quelle $SOURCE_IMAGE existiert nicht!"
-  exit 1
-fi
-cp -v "$SOURCE_IMAGE" "$RESCUE_IMAGE"
 sync
 
 # --- Erstelle installimage Konfiguration ---
@@ -74,7 +64,7 @@ PART /boot ext4 1024M
 PART /     ext4 all
 
 ## OPERATING SYSTEM IMAGE:
-IMAGE=$RESCUE_IMAGE
+IMAGE=$SOURCE_IMAGE
 EOF
 
 # --- Erstelle post-install Skript ---
