@@ -14,11 +14,11 @@ else
 fi
 
 echo "[+] Entferne alte Konfigurationsdateien"
-/bin/rm -f /root/autosetup.conf /post-install
+/bin/rm -f /autosetup /post-install
 sync
 
 echo "[+] Erzeuge installimage-Konfiguration /root/autosetup.conf"
-cat > /root/autosetup.conf <<'EOF'
+cat > /autosetup <<'EOF'
 ## ======================================================
 ##  Hetzner Online GmbH - installimage - custom config
 ## ======================================================
