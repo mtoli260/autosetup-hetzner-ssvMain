@@ -7,8 +7,8 @@ ADMINUSER="admin"
 GITHUB_USER="mtoli260"
 
 IMAGE_FILE="Ubuntu-2404-noble-amd64-base.tar.gz"
-SOURCE_IMAGE="/root/.oldroot/nfs/install/../images/$IMAGE_FILE"
-INSTALLIMAGE_CONF="/autosetup"
+SOURCE_IMAGE="/root/.oldroot/nfs/images/$IMAGE_FILE"
+INSTALLIMAGE_CONF="/root/autosetup.conf"
 
 DRIVES=(
   /dev/nvme0n1
@@ -149,7 +149,7 @@ INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
 
 if [ -x "$INSTALLIMAGE_CMD" ]; then
   echo "[+] Gefundenes installimage: $INSTALLIMAGE_CMD — starte Installation"
-  exec "$INSTALLIMAGE_CMD" -a -d -c /autosetup
+  exec "$INSTALLIMAGE_CMD" -a -d -c "$INSTALLIMAGE_CONF"
 else
   echo "[!] installimage wurde nicht gefunden unter $INSTALLIMAGE_CMD"
   echo "    Prüfe, ob das Rescue-System korrekt geladen wurde."
