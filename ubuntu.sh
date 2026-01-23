@@ -65,12 +65,14 @@ EOF
 echo "[+] Erzeuge /post-install"
 cat > /post-install <<'EOS'
 #!/bin/bash
+set -euo pipefail
 # -----------------------------
 # Hetzner Post-Install Key-Only + User Hardening
 # -----------------------------
 
-# Ziel-Chroot
-CHROOT="$FOLD/hdd"
+# --- 0) Zielsystem Pfad ---
+# installimage setzt $FOLD auf /root/.oldroot/hdd, aber wir gehen sicher:
+CHROOT="${FOLD:-/mnt}"
 
 # --- 1) User "ssv" anlegen ---
 if ! chroot "$CHROOT" id ssv >/dev/null 2>&1; then
@@ -81,56 +83,45 @@ fi
 # --- 2) SSH Keys holen ---
 SSH_KEYS_URL="https://github.com/mtoli260.keys"
 
+# Verzeichnisse anlegen
 mkdir -p "$CHROOT/root/.ssh" "$CHROOT/home/ssv/.ssh"
 chmod 700 "$CHROOT/root/.ssh" "$CHROOT/home/ssv/.ssh"
 
-curl -s "$SSH_KEYS_URL" -o "$CHROOT/root/.ssh/authorized_keys"
-curl -s "$SSH_KEYS_URL" -o "$CHROOT/home/ssv/.ssh/authorized_keys"
+# Keys herunterladen (über Chroot, damit sie ins Zielsystem kommen)
+chroot "$CHROOT" bash -c "curl -s $SSH_KEYS_URL -o /root/.ssh/authorized_keys"
+chroot "$CHROOT" bash -c "curl -s $SSH_KEYS_URL -o /home/ssv/.ssh/authorized_keys"
 
-chmod 600 "$CHROOT/root/.ssh/authorized_keys"
-chmod 600 "$CHROOT/home/ssv/.ssh/authorized_keys"
-
+# Rechte setzen
 chroot "$CHROOT" chown root:root /root/.ssh/authorized_keys
 chroot "$CHROOT" chown ssv:ssv /home/ssv/.ssh/authorized_keys
+chroot "$CHROOT" chmod 600 /root/.ssh/authorized_keys
+chroot "$CHROOT" chmod 600 /home/ssv/.ssh/authorized_keys
 
 # --- 3) Root + ssv Passwörter sperren ---
 chroot "$CHROOT" passwd -l root
 chroot "$CHROOT" passwd -l ssv
 
-# --- 4) SSH: Root-Login deaktivieren ---
+# --- 4) SSH: Root-Login deaktivieren + Key-Only ---
 chroot "$CHROOT" mkdir -p /etc/ssh/sshd_config.d
-cat >"$CHROOT/etc/ssh/sshd_config.d/99-keyonly.conf" <<'EOF'
+cat >"$CHROOT/etc/ssh/sshd_config.d/99-keyonly.conf" <<'EOD'
 # Enforce key-only SSH authentication
 PermitRootLogin no
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 ChallengeResponseAuthentication no
 PubkeyAuthentication yes
-EOF
-chmod 644 "$CHROOT/etc/ssh/sshd_config.d/99-keyonly.conf"
+EOD
 
-# --- 5) Fail2ban installieren (optional, stark empfohlen) ---
-chroot "$CHROOT" apt-get update
-chroot "$CHROOT" apt-get -y install fail2ban
+chroot "$CHROOT" chmod 644 /etc/ssh/sshd_config.d/99-keyonly.conf
 
-cat >"$CHROOT/etc/fail2ban/jail.d/sshd.local" <<'EOF'
-[sshd]
-enabled = true
-maxretry = 3
-bantime = 3600
-findtime = 600
-EOF
-
-chroot "$CHROOT" systemctl enable fail2ban
-
-# --- 6) SSH Syntax prüfen ---
+# --- 5) SSH Syntax prüfen ---
 chroot "$CHROOT" sshd -t || echo "sshd_config Syntax Warning!"
 
 echo "Post-Install Key-Only + User Hardening abgeschlossen"
-
 EOS
 
 chmod +x /post-install
+
 
 echo "[+] Starte installimage (ohne Parameter)"
 INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
