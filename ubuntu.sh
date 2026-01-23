@@ -23,21 +23,29 @@ cat > /autosetup <<'EOF'
 ##  Hetzner Online GmbH - installimage - custom config
 ## ======================================================
 
+## HARD DISK DRIVE(S):
 DRIVE1=/dev/nvme0n1
 DRIVE2=/dev/nvme1n1
 DRIVE3=/dev/nvme2n1
 
+## SOFTWARE RAID:
 SWRAID 1
 SWRAIDLEVEL 5
 
+## HOSTNAME:
 HOSTNAME=ssvMain1
 
+## NETWORK CONFIG:
 IPV4_ONLY no
+
+## MISC CONFIG:
 USE_KERNELMODE no
 
+## PARTITIONS / FILESYSTEMS:
 PART /boot ext4 1024M
 PART /     ext4 all
 
+## OPERATING SYSTEM IMAGE:
 IMAGE=/root/.oldroot/nfs/images/Ubuntu-2404-noble-amd64-base.tar.gz
 EOF
 
@@ -112,5 +120,12 @@ EOS
 
 chmod +x /post-install
 
-echo "[+] Starte automatische Installation"
-/root/.oldroot/nfs/install/installimage -a -d -c /autosetup
+echo "[+] Starte installimage (ohne Parameter)"
+INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
+
+if [ -x "$INSTALLIMAGE_CMD" ]; then
+  exec "$INSTALLIMAGE_CMD"
+else
+  echo "[!] installimage wurde nicht gefunden unter $INSTALLIMAGE_CMD"
+  exit 1
+fi
