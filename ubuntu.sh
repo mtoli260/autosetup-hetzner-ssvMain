@@ -33,20 +33,20 @@ SWRAID 1
 SWRAIDLEVEL 5
 
 ## HOSTNAME:
-HOSTNAME=ssvMain1
+HOSTNAME ssvMain1
 
 ## NETWORK CONFIG:
 IPV4_ONLY no
 
 ## MISC CONFIG:
-USE_KERNELMODE yes
+USE_KERNELMODE no
 
 ## PARTITIONS / FILESYSTEMS:
-PART /boot ext4 1024M
-PART /     ext4 all
+PART /boot ext3 1024M
+PART / ext4 all
 
 ## OPERATING SYSTEM IMAGE:
-IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-2404-noble-amd64-base.tar.
+IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-2404-noble-amd64-base.tar.gz
 EOF
 
 echo "[+] Erzeuge /post-install"
@@ -91,17 +91,6 @@ ufw allow 22/tcp
 ufw allow 13001/tcp
 ufw allow 12001/udp
 ufw --force enable
-
-echo "[+] Failover-IP Vorbereitung (Netplan)"
-cat >/etc/netplan/60-failover.yaml <<NETPLAN
-network:
-  version: 2
-  ethernets:
-    eth0:
-      dhcp4: true
-      addresses: []
-NETPLAN
-netplan apply || true
 
 echo "[+] RAID Monitoring"
 apt -y install mdadm
