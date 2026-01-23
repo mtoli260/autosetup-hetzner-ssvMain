@@ -17,35 +17,27 @@ echo "[+] Entferne alte Konfigurationsdateien"
 /bin/rm -f /autosetup /post-install
 sync
 
-echo "[+] Erzeuge installimage-Konfiguration /root/autosetup.conf"
+echo "[+] Erzeuge installimage-Konfiguration /autosetup"
 cat > /autosetup <<'EOF'
 ## ======================================================
 ##  Hetzner Online GmbH - installimage - custom config
 ## ======================================================
 
-## HARD DISK DRIVE(S):
 DRIVE1=/dev/nvme0n1
 DRIVE2=/dev/nvme1n1
 DRIVE3=/dev/nvme2n1
 
-## SOFTWARE RAID:
 SWRAID 1
 SWRAIDLEVEL 5
 
-## HOSTNAME:
 HOSTNAME=ssvMain1
 
-## NETWORK CONFIG:
 IPV4_ONLY no
-
-## MISC CONFIG:
 USE_KERNELMODE no
 
-## PARTITIONS / FILESYSTEMS:
 PART /boot ext4 1024M
 PART /     ext4 all
 
-## OPERATING SYSTEM IMAGE:
 IMAGE=/root/.oldroot/nfs/images/Ubuntu-2404-noble-amd64-base.tar.gz
 EOF
 
@@ -121,14 +113,4 @@ EOS
 chmod +x /post-install
 
 echo "[+] Starte automatische Installation"
-
-INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
-
-if [ -x "$INSTALLIMAGE_CMD" ]; then
-  echo "[+] Gefundenes installimage: $INSTALLIMAGE_CMD — starte Installation"
-  exec "$INSTALLIMAGE_CMD" -a -d -c /autosetup
-else
-  echo "[!] installimage wurde nicht gefunden unter $INSTALLIMAGE_CMD"
-  echo "    Prüfe, ob das Rescue-System korrekt geladen wurde."
-  exit 1
-fi
+/root/.oldroot/nfs/install/installimage -a -d -c /autosetup
