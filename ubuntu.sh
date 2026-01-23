@@ -126,7 +126,7 @@ INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
 
 if [ -x "$INSTALLIMAGE_CMD" ]; then
   echo "[+] Gefundenes installimage: $INSTALLIMAGE_CMD — starte Installation"
-  exec "$INSTALLIMAGE_CMD" -a -d -c /root/autosetup.conf
+  exec "$INSTALLIMAGE_CMD" -a -d -c /autosetup
 else
   echo "[!] installimage wurde nicht gefunden unter $INSTALLIMAGE_CMD"
   echo "    Prüfe, ob das Rescue-System korrekt geladen wurde."
