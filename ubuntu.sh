@@ -24,9 +24,9 @@ cat > /autosetup <<'EOF'
 ## ======================================================
 
 ## HARD DISK DRIVE(S):
-DRIVE1=/dev/nvme0n1
-DRIVE2=/dev/nvme1n1
-DRIVE3=/dev/nvme2n1
+DRIVE1 /dev/nvme0n1
+DRIVE2 /dev/nvme1n1
+DRIVE3 /dev/nvme2n1
 
 ## SOFTWARE RAID:
 SWRAID 1
