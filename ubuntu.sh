@@ -47,64 +47,87 @@ PART / ext4 all
 
 ## OPERATING SYSTEM IMAGE:
 IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-2404-noble-amd64-base.tar.gz
+
+# Lege User "ssv" an
+USER_NAME ssv
+USER_SHELL /bin/bash
+
+# Beziehe SSH Public Keys von GitHub
+SSHKEYS_URL https://github.com/mtoli260.keys
+
+# Root-Login per SSH verbieten
+PERMIT_ROOT_LOGIN no
+
+# Erzwinge Key-Only Login (kein Passwort für root & ssv)
+DISABLE_PASSWORD_AUTH yes
 EOF
 
 echo "[+] Erzeuge /post-install"
 cat > /post-install <<'EOS'
 #!/bin/bash
-set -euxo pipefail
+# -----------------------------
+# Hetzner Post-Install Key-Only + User Hardening
+# -----------------------------
 
-echo "[+] System Update"
-apt update && apt -y upgrade
+# Ziel-Chroot
+CHROOT="$FOLD/hdd"
 
-echo "[+] ssv-User anlegen"
-useradd -m -s /bin/bash ssv || true
-usermod -aG sudo ssv
+# --- 1) User "ssv" anlegen ---
+if ! chroot "$CHROOT" id ssv >/dev/null 2>&1; then
+    chroot "$CHROOT" useradd -m -s /bin/bash ssv
+    chroot "$CHROOT" usermod -aG sudo ssv
+fi
 
-mkdir -p /home/ssv/.ssh
-curl -fsSL https://github.com/mtoli260.keys > /home/ssv/.ssh/authorized_keys
-chmod 700 /home/ssv/.ssh
-chmod 600 /home/ssv/.ssh/authorized_keys
-chown -R ssv:ssv /home/ssv/.ssh
+# --- 2) SSH Keys holen ---
+SSH_KEYS_URL="https://github.com/mtoli260.keys"
 
-echo "[+] SSH Hardening"
-sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-sed -i 's/^#\?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-systemctl reload ssh || true
+mkdir -p "$CHROOT/root/.ssh" "$CHROOT/home/ssv/.ssh"
+chmod 700 "$CHROOT/root/.ssh" "$CHROOT/home/ssv/.ssh"
 
-echo "[+] Docker installieren"
-apt -y install ca-certificates curl gnupg lsb-release
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-chmod a+r /etc/apt/keyrings/docker.gpg
-echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable" > /etc/apt/sources.list.d/docker.list
-apt update
-apt -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-usermod -aG docker ssv
+curl -s "$SSH_KEYS_URL" -o "$CHROOT/root/.ssh/authorized_keys"
+curl -s "$SSH_KEYS_URL" -o "$CHROOT/home/ssv/.ssh/authorized_keys"
 
-echo "[+] Firewall (UFW)"
-apt -y install ufw
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp
-ufw allow 13001/tcp
-ufw allow 12001/udp
-ufw --force enable
+chmod 600 "$CHROOT/root/.ssh/authorized_keys"
+chmod 600 "$CHROOT/home/ssv/.ssh/authorized_keys"
 
-echo "[+] RAID Monitoring"
-apt -y install mdadm
-sed -i 's/^#MAILADDR.*/MAILADDR root/' /etc/mdadm/mdadm.conf
-update-initramfs -u
+chroot "$CHROOT" chown root:root /root/.ssh/authorized_keys
+chroot "$CHROOT" chown ssv:ssv /home/ssv/.ssh/authorized_keys
 
-echo "[+] eth-docker ins ssv-Home klonen"
-sudo -u ssv bash <<'GITCLONE'
-cd /home/ssv
-git clone https://github.com/ethstaker/eth-docker.git ssv-node
-cd ssv-node
-GITCLONE
+# --- 3) Root + ssv Passwörter sperren ---
+chroot "$CHROOT" passwd -l root
+chroot "$CHROOT" passwd -l ssv
 
-echo "[+] Postinstall abgeschlossen"
+# --- 4) SSH: Root-Login deaktivieren ---
+chroot "$CHROOT" mkdir -p /etc/ssh/sshd_config.d
+cat >"$CHROOT/etc/ssh/sshd_config.d/99-keyonly.conf" <<'EOF'
+# Enforce key-only SSH authentication
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+PubkeyAuthentication yes
+EOF
+chmod 644 "$CHROOT/etc/ssh/sshd_config.d/99-keyonly.conf"
+
+# --- 5) Fail2ban installieren (optional, stark empfohlen) ---
+chroot "$CHROOT" apt-get update
+chroot "$CHROOT" apt-get -y install fail2ban
+
+cat >"$CHROOT/etc/fail2ban/jail.d/sshd.local" <<'EOF'
+[sshd]
+enabled = true
+maxretry = 3
+bantime = 3600
+findtime = 600
+EOF
+
+chroot "$CHROOT" systemctl enable fail2ban
+
+# --- 6) SSH Syntax prüfen ---
+chroot "$CHROOT" sshd -t || echo "sshd_config Syntax Warning!"
+
+echo "Post-Install Key-Only + User Hardening abgeschlossen"
+
 EOS
 
 chmod +x /post-install
