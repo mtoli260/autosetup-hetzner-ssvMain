@@ -142,6 +142,16 @@ EOS
 
 chmod +x /post-install
 
-# --- Automatische Installation starten ---
-echo "[+] Starte installimage"
-installimage -a -d -c "$INSTALLIMAGE_CONF"
+echo "[+] Starte automatische Installation"
+
+# Absoluter Pfad zu installimage im Hetzner Rescue-System
+INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
+
+if [ -x "$INSTALLIMAGE_CMD" ]; then
+  echo "[+] Gefundenes installimage: $INSTALLIMAGE_CMD — starte Installation"
+  exec "$INSTALLIMAGE_CMD" -a -d -c /autosetup
+else
+  echo "[!] installimage wurde nicht gefunden unter $INSTALLIMAGE_CMD"
+  echo "    Prüfe, ob das Rescue-System korrekt geladen wurde."
+  exit 1
+fi
