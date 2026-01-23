@@ -44,23 +44,62 @@ sync
 echo "[+] Erzeuge installimage-Konfiguration"
 
 cat > "$INSTALLIMAGE" <<EOF
-IMAGE=/root/.oldroot/nfs/install/../Images/$IMAGE
 
-HOSTNAME=$HOSTNAME
+## ======================================================
+##  Hetzner Online GmbH - installimage - custom config
+## ======================================================
+
+## ====================
+##  HARD DISK DRIVE(S):
+## ====================
 
 DRIVE1=${DRIVES[0]}
 DRIVE2=${DRIVES[1]}
 DRIVE3=${DRIVES[2]}
 
-USE_KERNEL_MODE_SETTING yes
 
-SWRAID=1
-SWRAIDLEVEL=5
+## ===============
+##  SOFTWARE RAID:
+## ===============
 
-PART /boot ext3 1024M
-PART / ext4 all
+SWRAID 1
+SWRAIDLEVEL 5
 
-POSTINSTALL=1
+
+## ==========
+##  HOSTNAME:
+## ==========
+
+HOSTNAME=$HOSTNAME
+
+
+## ================
+##  NETWORK CONFIG:
+## ================
+
+IPV4_ONLY no
+
+
+## =============
+##  MISC CONFIG:
+## =============
+
+USE_KERNELMODE no
+
+
+## ==========================
+##  PARTITIONS / FILESYSTEMS:
+## ==========================
+
+PART /boot ext4 1024M
+PART /     ext4 all
+
+
+## ========================
+##  OPERATING SYSTEM IMAGE:
+## ========================
+
+IMAGE=/root/.oldroot/nfs/install/../images/$IMAGE
 EOF
 
 echo "[+] Erzeuge /post-install (Postinstall-Skript für das Zielsystem)"
