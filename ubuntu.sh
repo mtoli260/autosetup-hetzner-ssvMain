@@ -46,7 +46,7 @@ PART /boot ext4 1024M
 PART /     ext4 all
 
 ## OPERATING SYSTEM IMAGE:
-IMAGE=/root/.oldroot/nfs/images/Ubuntu-2404-noble-amd64-base.tar.gz
+IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-2404-noble-amd64-base.tar.
 EOF
 
 echo "[+] Erzeuge /post-install"
