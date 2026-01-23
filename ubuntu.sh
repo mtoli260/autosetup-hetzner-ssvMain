@@ -57,15 +57,15 @@ set -euxo pipefail
 echo "[+] System Update"
 apt update && apt -y upgrade
 
-echo "[+] Admin-User anlegen"
-useradd -m -s /bin/bash admin || true
-usermod -aG sudo admin
+echo "[+] ssv-User anlegen"
+useradd -m -s /bin/bash ssv || true
+usermod -aG sudo ssv
 
-mkdir -p /home/admin/.ssh
-curl -fsSL https://github.com/mtoli260.keys > /home/admin/.ssh/authorized_keys
-chmod 700 /home/admin/.ssh
-chmod 600 /home/admin/.ssh/authorized_keys
-chown -R admin:admin /home/admin/.ssh
+mkdir -p /home/ssv/.ssh
+curl -fsSL https://github.com/mtoli260.keys > /home/ssv/.ssh/authorized_keys
+chmod 700 /home/ssv/.ssh
+chmod 600 /home/ssv/.ssh/authorized_keys
+chown -R ssv:ssv /home/ssv/.ssh
 
 echo "[+] SSH Hardening"
 sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
@@ -81,7 +81,7 @@ chmod a+r /etc/apt/keyrings/docker.gpg
 echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable" > /etc/apt/sources.list.d/docker.list
 apt update
 apt -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-usermod -aG docker admin
+usermod -aG docker ssv
 
 echo "[+] Firewall (UFW)"
 apt -y install ufw
@@ -97,9 +97,9 @@ apt -y install mdadm
 sed -i 's/^#MAILADDR.*/MAILADDR root/' /etc/mdadm/mdadm.conf
 update-initramfs -u
 
-echo "[+] eth-docker ins Admin-Home klonen"
-sudo -u admin bash <<'GITCLONE'
-cd /home/admin
+echo "[+] eth-docker ins ssv-Home klonen"
+sudo -u ssv bash <<'GITCLONE'
+cd /home/ssv
 git clone https://github.com/ethstaker/eth-docker.git ssv-node
 cd ssv-node
 GITCLONE
