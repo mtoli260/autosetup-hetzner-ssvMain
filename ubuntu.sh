@@ -54,14 +54,4 @@ echo "===== Bootstrap abgeschlossen ====="
 
 # OPTIONAL: installimage direkt starten
 echo "Starte installimage mit /autosetup"
-installimage -a -d -c /autosetup
-
-echo "[+] Starte installimage (ohne Parameter)"
-INSTALLIMAGE_CMD="/root/.oldroot/nfs/install/installimage"
-
-if [ -x "$INSTALLIMAGE_CMD" ]; then
-  exec "$INSTALLIMAGE_CMD"
-else
-  echo "[!] installimage wurde nicht gefunden unter $INSTALLIMAGE_CMD"
-  exit 1
-fi
+/root/.oldroot/nfs/install/installimage -a -d -c /autosetup
