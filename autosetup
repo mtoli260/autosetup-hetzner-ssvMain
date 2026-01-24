@@ -27,19 +27,5 @@ PART / ext4 all
 ## OPERATING SYSTEM IMAGE:
 IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-2404-noble-amd64-base.tar.gz
 
-# Lege User "ssv" an
-USER_NAME ssv
-USER_SHELL /bin/bash
-
-# Beziehe SSH Public Keys von GitHub
-SSHKEYS_URL https://github.com/mtoli260.keys
-
-# Root-Login per SSH verbieten
-PERMIT_ROOT_LOGIN no
-
-# Erzwinge Key-Only Login (kein Passwort für root & ssv)
-DISABLE_PASSWORD_AUTH yes
-
 # verweise auf post-install Datatei
 POSTINSTALL /post-install.sh
-
