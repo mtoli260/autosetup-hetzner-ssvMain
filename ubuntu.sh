@@ -5,7 +5,7 @@ AUTOSETUP_URL="https://raw.githubusercontent.com/mtoli260/autosetup-hetzner-ssvM
 POSTINSTALL_URL="https://raw.githubusercontent.com/mtoli260/autosetup-hetzner-ssvMain/refs/heads/main/post-install.sh"
 
 AUTOSETUP_DEST="/autosetup"
-POSTINSTALL_DEST="/temp/post-install.sh"
+POSTINSTALL_DEST="/post-install.sh"
 
 echo "[+] STOPPE evtl. vorhandene RAID-Arrays"
 mdadm --stop /dev/md* 2>/dev/null || true
@@ -44,15 +44,15 @@ chmod 600 "$AUTOSETUP_DEST"
 chmod +x "$POSTINSTALL_DEST"
 
 echo "Dateien erfolgreich abgelegt:"
-ls -l /autosetup /temp/post-install.sh
+ls -l /autosetup /post-install.sh
 
 echo "Kurzer Inhalt-Check:"
 head -n 5 /autosetup
-head -n 5 /temp/post-install.sh
+head -n 5 /post-install.sh
 
 echo "===== Bootstrap abgeschlossen ====="
 
 # OPTIONAL: installimage direkt starten
 echo "Starte installimage mit /autosetup"
-bash /root/.oldroot/nfs/install/installimage -a -c /autoinstall -x /tmp/post-install.sh 
+bash /root/.oldroot/nfs/install/installimage -a -c /autoinstall -x /post-install.sh 
 
