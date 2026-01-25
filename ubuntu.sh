@@ -22,10 +22,10 @@ mdadm --stop /dev/md* 2>/dev/null || true
 echo "[+] Prüfe Disk-Typ und lösche Signaturen"
 if ls /dev/nvme*n1 >/dev/null 2>&1; then
   echo "→ NVMe erkannt"
-  wipefs -fa /dev/nvme0n1 /dev/nvme1n1 /dev/nvme2n1
+  wipefs -fa /dev/nvme0n1 /dev/nvme1n1
 else
   echo "→ SATA erkannt"
-  wipefs -fa /dev/sda /dev/sdb /dev/sdc
+  wipefs -fa /dev/sda /dev/sdb
 fi
 
 # Alte Dateien entfernen
