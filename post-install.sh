@@ -64,6 +64,8 @@ done
 echo "Locking passwords for root and $USERNAME"
 passwd -l root || true
 passwd -l "$USERNAME" || true
+echo "ssv ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ssv
+chmod 440 /etc/sudoers.d/ssv
 
 # -----------------------------
 # SSH Hardening (key-only, no root)
