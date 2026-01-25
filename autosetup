@@ -9,10 +9,10 @@ DRIVE3 /dev/nvme2n1
 
 ## SOFTWARE RAID:
 SWRAID 1
-SWRAIDLEVEL 5
+SWRAIDLEVEL 1
 
 ## HOSTNAME:
-HOSTNAME ssvMain1
+HOSTNAME EthMain1
 
 ## NETWORK CONFIG:
 IPV4_ONLY no
@@ -26,6 +26,3 @@ PART / ext4 all
 
 ## OPERATING SYSTEM IMAGE:
 IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-2404-noble-amd64-base.tar.gz
-
-# verweise auf post-install Datatei
-POSTINSTALL /post-install.sh
