@@ -69,18 +69,11 @@ passwd -l "$USERNAME" || true
 # SSH Hardening (key-only, no root)
 # -----------------------------
 echo "Hardening SSH configuration"
-
-mkdir -p /etc/ssh/sshd_config.d
-
-cat >/etc/ssh/sshd_config.d/99-keyonly.conf <<'EOD'
-PermitRootLogin no
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-ChallengeResponseAuthentication no
-PubkeyAuthentication yes
-EOD
-
-chmod 644 /etc/ssh/sshd_config.d/99-keyonly.conf
+sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/^#\?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
 # Validate SSH config
 sshd -t
