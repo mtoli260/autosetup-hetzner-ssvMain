@@ -1,15 +1,24 @@
 #!/bin/bash
 set -euo pipefail
 
+# -----------------------------
+# Bootstrap Script für Hetzner Rescue
+# Lädt autosetup + post-install, stoppt alte RAID-Arrays,
+# löscht Signaturen, startet installimage automatisch
+# -----------------------------
+
 AUTOSETUP_URL="https://raw.githubusercontent.com/mtoli260/autosetup-hetzner-ssvMain/refs/heads/main/autosetup"
 POSTINSTALL_URL="https://raw.githubusercontent.com/mtoli260/autosetup-hetzner-ssvMain/refs/heads/main/post-install.sh"
 
-AUTOSETUP_DEST="/autosetup"
-POSTINSTALL_DEST="/post-install.sh"
+# Zielpfade im Rescue-System
+AUTOSETUP_DEST="/root/autosetup"
+POSTINSTALL_DEST="/root/post-install.sh"
 
+# Alte RAIDs stoppen
 echo "[+] STOPPE evtl. vorhandene RAID-Arrays"
 mdadm --stop /dev/md* 2>/dev/null || true
 
+# Festplatten wipe
 echo "[+] Prüfe Disk-Typ und lösche Signaturen"
 if ls /dev/nvme*n1 >/dev/null 2>&1; then
   echo "→ NVMe erkannt"
@@ -19,16 +28,19 @@ else
   wipefs -fa /dev/sda /dev/sdb /dev/sdc
 fi
 
+# Alte Dateien entfernen
 echo "[+] Entferne alte Konfigurationsdateien"
-/bin/rm -f /autosetup /post-install
+rm -f "$AUTOSETUP_DEST" "$POSTINSTALL_DEST"
 sync
 
 echo "===== Bootstrap gestartet: $(date) ====="
 
-echo "Lade autosetup..."
+# Lade autosetup
+echo "[+] Lade autosetup..."
 curl -fsSL "$AUTOSETUP_URL" -o "$AUTOSETUP_DEST"
 
-echo "Lade post-install.sh..."
+# Lade post-install.sh
+echo "[+] Lade post-install.sh..."
 curl -fsSL "$POSTINSTALL_URL" -o "$POSTINSTALL_DEST"
 
 # Validierung
@@ -39,20 +51,19 @@ for f in "$AUTOSETUP_DEST" "$POSTINSTALL_DEST"; do
   fi
 done
 
-# Rechte
+# Rechte setzen
 chmod 600 "$AUTOSETUP_DEST"
 chmod +x "$POSTINSTALL_DEST"
 
-echo "Dateien erfolgreich abgelegt:"
-ls -l /autosetup /post-install.sh
+echo "[+] Dateien erfolgreich abgelegt:"
+ls -l "$AUTOSETUP_DEST" "$POSTINSTALL_DEST"
 
 echo "Kurzer Inhalt-Check:"
-head -n 5 /autosetup
-head -n 5 /post-install.sh
+head -n 5 "$AUTOSETUP_DEST"
+head -n 5 "$POSTINSTALL_DEST"
 
 echo "===== Bootstrap abgeschlossen ====="
 
-# OPTIONAL: installimage direkt starten
-echo "Starte installimage mit /autosetup"
-bash /root/.oldroot/nfs/install/installimage
-
+# Installimage starten mit Post-Install-Script
+echo "[+] Starte installimage mit /root/autosetup + Post-Install"
+bash /root/.oldroot/nfs/install/installimage -a -c "$AUTOSETUP_DEST" -x "$POSTINSTALL_DEST"
