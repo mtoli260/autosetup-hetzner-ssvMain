@@ -112,4 +112,4 @@ echo "===== DebPostInstall (automated) abgeschlossen: $(date) ====="
 
 # --- Reboot ---
 echo "System wird neu gestartet..."
-reboot
+#reboot
