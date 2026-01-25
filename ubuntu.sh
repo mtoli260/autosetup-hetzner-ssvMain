@@ -16,8 +16,8 @@ POSTINSTALL_DEST="/root/post-install.sh"
 
 # Alte RAIDs stoppen
 echo "[+] STOPPE evtl. vorhandene RAID-Arrays und lösche disks"
-mdadm --stop /dev/md*
-wipefs -fa /dev/nvme*n1
+#mdadm --stop /dev/md*
+#wipefs -fa /dev/nvme*n1
 
 # Alte Dateien entfernen
 echo "[+] Entferne alte Konfigurationsdateien"
