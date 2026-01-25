@@ -54,5 +54,5 @@ echo "===== Bootstrap abgeschlossen ====="
 
 # OPTIONAL: installimage direkt starten
 echo "Starte installimage mit /autosetup"
-bash /root/.oldroot/nfs/install/installimage -a -c /autosetup -x /post-install.sh 
+bash /root/.oldroot/nfs/install/installimage -a -x /post-install.sh 
 
