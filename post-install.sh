@@ -8,7 +8,7 @@ export DEBIAN_FRONTEND=noninteractive
 # -----------------------------
 USERNAME="ssv"
 SSH_KEYS_URL="https://github.com/mtoli260.keys"
-TIMEZONE="Europe/Berlin"
+TIMEZONE="UTC"
 
 echo "===== DebPostInstall (automated) gestartet: $(date) ====="
 
