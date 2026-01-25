@@ -1,88 +1,78 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
+export DEBIAN_FRONTEND=noninteractive
+
 # -----------------------------
-# Hetzner Post-Install Key-Only + User Hardening (ROBUST)
+# Config
 # -----------------------------
-
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-# --- 0) Zielsystem Pfad ---
-CHROOT="${FOLD:-/mnt}"
-
-# --- Logging ---
-LOGFILE="$CHROOT/root/post-install_log"
-mkdir -p "$CHROOT/root"
-touch "$LOGFILE"
-chmod 600 "$LOGFILE"
-
-exec > >(tee -a "$LOGFILE") 2>&1
-
-echo "===== Post-Install gestartet: $(date) ====="
-echo "CHROOT = $CHROOT"
-
-# --- Basis-Mounts für sauberes chroot ---
-echo "Mounting chroot base filesystems"
-mount --bind /dev      "$CHROOT/dev"
-mount --bind /dev/pts "$CHROOT/dev/pts"
-mount -t proc proc    "$CHROOT/proc"
-mount -t sysfs sys    "$CHROOT/sys"
-
-# --- Sanity Check ---
-if [ ! -x "$CHROOT/usr/sbin/useradd" ]; then
-    echo "FEHLER: useradd nicht gefunden in $CHROOT/usr/sbin/useradd" >&2
-    exit 1
-fi
-
-# --- 1) User "ssv" anlegen ---
-if ! chroot "$CHROOT" /usr/bin/id ssv >/dev/null 2>&1; then
-    echo "Erstelle User ssv"
-    chroot "$CHROOT" /usr/sbin/useradd -m -s /bin/bash ssv
-    chroot "$CHROOT" /usr/sbin/usermod -aG sudo ssv
-else
-    echo "User ssv existiert bereits"
-fi
-
-# --- 2) SSH Keys holen ---
+USERNAME="ssv"
 SSH_KEYS_URL="https://github.com/mtoli260.keys"
+TIMEZONE="Europe/Berlin"
 
-echo "Erstelle .ssh Verzeichnisse"
-mkdir -p "$CHROOT/root/.ssh" "$CHROOT/home/ssv/.ssh"
-chmod 700 "$CHROOT/root/.ssh" "$CHROOT/home/ssv/.ssh"
+echo "===== DebPostInstall (automated) gestartet: $(date) ====="
 
-echo "Lade SSH Keys von $SSH_KEYS_URL"
+# -----------------------------
+# System Update
+# -----------------------------
+echo "Updating the system..."
+apt-get update
+apt-get full-upgrade -y
+apt-get autoremove -y
+apt-get autoclean -y
 
-chroot "$CHROOT" /usr/bin/curl -fsSL "$SSH_KEYS_URL" -o /root/.ssh/authorized_keys
-chroot "$CHROOT" /usr/bin/curl -fsSL "$SSH_KEYS_URL" -o /home/ssv/.ssh/authorized_keys
+# -----------------------------
+# Install necessary packages
+# -----------------------------
+echo "Installing necessary packages..."
+apt-get install -y sudo openssh-server ufw systemd-timesyncd vim htop net-tools curl wget git
 
-# Validierung: Datei darf nicht leer sein
-if [ ! -s "$CHROOT/root/.ssh/authorized_keys" ]; then
-    echo "FEHLER: root authorized_keys ist leer!" >&2
-    exit 1
+# -----------------------------
+# User ssv anlegen (falls nicht vorhanden)
+# -----------------------------
+if ! id "$USERNAME" &>/dev/null; then
+    echo "Creating user $USERNAME"
+    useradd -m -s /bin/bash -G sudo "$USERNAME"
+else
+    echo "User $USERNAME already exists"
 fi
 
-if [ ! -s "$CHROOT/home/ssv/.ssh/authorized_keys" ]; then
-    echo "FEHLER: ssv authorized_keys ist leer!" >&2
-    exit 1
-fi
+# -----------------------------
+# SSH Keys für root + ssv
+# -----------------------------
+echo "Configuring SSH keys from GitHub for root and $USERNAME"
 
-echo "Setze Ownership und Rechte für authorized_keys"
-chroot "$CHROOT" /bin/chown root:root /root/.ssh/authorized_keys
-chroot "$CHROOT" /bin/chown ssv:ssv /home/ssv/.ssh/authorized_keys
-chroot "$CHROOT" /bin/chmod 600 /root/.ssh/authorized_keys
-chroot "$CHROOT" /bin/chmod 600 /home/ssv/.ssh/authorized_keys
+for U in root "$USERNAME"; do
+    HOME_DIR=$(eval echo "~$U")
+    mkdir -p "$HOME_DIR/.ssh"
+    chmod 700 "$HOME_DIR/.ssh"
 
-# --- 3) Root + ssv Passwörter sperren ---
-echo "Sperre Passwörter für root und ssv"
-chroot "$CHROOT" /usr/bin/passwd -l root || true
-chroot "$CHROOT" /usr/bin/passwd -l ssv  || true
+    curl -fsSL "$SSH_KEYS_URL" -o "$HOME_DIR/.ssh/authorized_keys"
 
-# --- 4) SSH: Root-Login deaktivieren + Key-Only ---
-echo "Konfiguriere SSH Key-Only Zugriff"
-chroot "$CHROOT" /bin/mkdir -p /etc/ssh/sshd_config.d
+    if [ ! -s "$HOME_DIR/.ssh/authorized_keys" ]; then
+        echo "ERROR: authorized_keys for $U is empty!" >&2
+        exit 1
+    fi
 
-cat >"$CHROOT/etc/ssh/sshd_config.d/99-keyonly.conf" <<'EOD'
-# Enforce key-only SSH authentication
+    chmod 600 "$HOME_DIR/.ssh/authorized_keys"
+    chown -R "$U:$U" "$HOME_DIR/.ssh"
+done
+
+# -----------------------------
+# Lock passwords (key-only)
+# -----------------------------
+echo "Locking passwords for root and $USERNAME"
+passwd -l root || true
+passwd -l "$USERNAME" || true
+
+# -----------------------------
+# SSH Hardening (key-only, no root)
+# -----------------------------
+echo "Hardening SSH configuration"
+
+mkdir -p /etc/ssh/sshd_config.d
+
+cat >/etc/ssh/sshd_config.d/99-keyonly.conf <<'EOD'
 PermitRootLogin no
 PasswordAuthentication no
 KbdInteractiveAuthentication no
@@ -90,17 +80,38 @@ ChallengeResponseAuthentication no
 PubkeyAuthentication yes
 EOD
 
-chroot "$CHROOT" /bin/chmod 644 /etc/ssh/sshd_config.d/99-keyonly.conf
+chmod 644 /etc/ssh/sshd_config.d/99-keyonly.conf
 
-# --- 5) SSH Syntax prüfen ---
-echo "Prüfe sshd Konfiguration"
-if chroot "$CHROOT" /usr/sbin/sshd -t; then
-    echo "sshd_config Syntax OK"
-else
-    echo "WARNUNG: sshd_config Syntax-Fehler!" >&2
-fi
+# Validate SSH config
+sshd -t
 
-echo "===== Post-Install abgeschlossen: $(date) ====="
+systemctl restart ssh
+
+# -----------------------------
+# UFW Firewall
+# -----------------------------
+echo "Configuring UFW firewall"
+ufw allow OpenSSH
+ufw --force enable
+
+# -----------------------------
+# Timezone + Time Sync
+# -----------------------------
+echo "Setting timezone to $TIMEZONE"
+timedatectl set-timezone "$TIMEZONE"
+
+echo "Enabling systemd-timesyncd"
+systemctl enable systemd-timesyncd
+systemctl restart systemd-timesyncd
+
+# -----------------------------
+# NO SWAP (explicitly ensure none is configured)
+# -----------------------------
+echo "Ensuring no swap is configured"
+swapoff -a || true
+sed -i '/swapfile/d' /etc/fstab
+
+echo "===== DebPostInstall (automated) abgeschlossen: $(date) ====="
 
 # --- Reboot ---
 echo "System wird neu gestartet..."
