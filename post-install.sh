@@ -16,10 +16,10 @@ echo "===== DebPostInstall (automated) gestartet: $(date) ====="
 # System Update
 # -----------------------------
 echo "Updating the system..."
-apt-get update
-apt-get full-upgrade -y
-apt-get autoremove -y
-apt-get autoclean -y
+apt update
+apt full-upgrade -y
+apt autoremove -y
+apt autoclean -y
 
 # -----------------------------
 # Install necessary packages
