@@ -15,18 +15,9 @@ AUTOSETUP_DEST="/root/autosetup"
 POSTINSTALL_DEST="/root/post-install.sh"
 
 # Alte RAIDs stoppen
-echo "[+] STOPPE evtl. vorhandene RAID-Arrays"
-mdadm --stop /dev/md* 2>/dev/null || true
-
-# Festplatten wipe
-echo "[+] Prüfe Disk-Typ und lösche Signaturen"
-if ls /dev/nvme*n1 >/dev/null 2>&1; then
-  echo "→ NVMe erkannt"
-  wipefs -fa /dev/nvme0n1 /dev/nvme1n1
-else
-  echo "→ SATA erkannt"
-  wipefs -fa /dev/sda /dev/sdb
-fi
+echo "[+] STOPPE evtl. vorhandene RAID-Arrays und lösche disks"
+mdadm --stop /dev/md*
+wipefs -fa /dev/nvme*n1
 
 # Alte Dateien entfernen
 echo "[+] Entferne alte Konfigurationsdateien"
